@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { supabase, SupabaseClient } from './supabase';
 import { v4 as uuidv4 } from 'uuid';
 
 export interface Video {
@@ -53,11 +53,37 @@ interface SessionData {
   [key: string]: any;
 }
 
+// Define interface for video data coming from the UI
+export interface VideoInput {
+  videoId: string;
+  title: string;
+  url: string;
+  thumbnailUrl: string;
+  channelName: string;
+  description: string;
+  transcript?: any[];
+  summary?: string;
+  dateAdded: number;
+}
+
+// Define interface for session data coming from the UI
+export interface SessionInput {
+  videoId: string;
+  videoTitle: string;
+  startTime: string;
+  endTime?: string;
+  watchDuration: number;
+  focusScore: number;
+  pauseCount: number;
+  tabSwitchCount: number;
+  completionRate: number;
+}
+
 export class DatabaseService {
   /**
    * Save a video to Supabase
    */
-  async saveVideo(video: any, userId: string): Promise<{ data: any, error: any }> {
+  async saveVideo(video: VideoInput, userId: string): Promise<{ data: any, error: any }> {
     // Check if video already exists for this user
     const { data: existingVideos } = await supabase
       .from('videos')
@@ -123,17 +149,7 @@ export class DatabaseService {
   /**
    * Save a watch session
    */
-  async saveWatchSession(session: {
-    videoId: string;
-    videoTitle: string;
-    startTime: string;
-    endTime?: string;
-    watchDuration: number;
-    focusScore: number;
-    pauseCount: number;
-    tabSwitchCount: number;
-    completionRate: number;
-  }, userId: string): Promise<{ data: any, error: any }> {
+  async saveWatchSession(session: SessionInput, userId: string): Promise<{ data: any, error: any }> {
     return await supabase
       .from('watch_sessions')
       .insert({
@@ -154,7 +170,7 @@ export class DatabaseService {
   /**
    * Update a watch session with end time and metrics
    */
-  async updateWatchSession(sessionId: string, data: any): Promise<{ data: any, error: any }> {
+  async updateWatchSession(sessionId: string, data: Partial<SessionInput>): Promise<{ data: any, error: any }> {
     return await supabase
       .from('watch_sessions')
       .update({
@@ -171,7 +187,7 @@ export class DatabaseService {
   /**
    * Get recent watch sessions for a user
    */
-  async getRecentSessions(userId: string, limit: number = 5): Promise<any[]> {
+  async getRecentSessions(userId: string, limit: number = 5): Promise<SessionInput[]> {
     const { data, error } = await supabase
       .from('watch_sessions')
       .select('*')
@@ -184,6 +200,8 @@ export class DatabaseService {
       return [];
     }
     
+    if (!data) return [];
+    
     return data.map((session: SessionData) => ({
       id: session.id,
       videoId: session.video_id,
@@ -195,7 +213,7 @@ export class DatabaseService {
       pauseCount: session.pause_count,
       tabSwitchCount: session.tab_switch_count,
       completionRate: session.completion_rate
-    })) || [];
+    }));
   }
   
   /**
@@ -249,7 +267,7 @@ export class DatabaseService {
   /**
    * Sync local videos with Supabase
    */
-  async syncVideosToCloud(videos: any[], userId: string): Promise<{ succeeded: number, failed: number }> {
+  async syncVideosToCloud(videos: VideoInput[], userId: string): Promise<{ succeeded: number, failed: number }> {
     let succeeded = 0;
     let failed = 0;
     

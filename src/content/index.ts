@@ -86,7 +86,7 @@ async function saveVideoData(data: any) {
         transcript: JSON.stringify(data.transcript || [])
       };
 
-      const savedVideo = await dbService.saveVideo(supabaseVideoData);
+      const savedVideo = await dbService.saveVideo(supabaseVideoData, currentUser.id);
       if (savedVideo) {
         console.log('Video saved to Supabase:', savedVideo.title);
         showSavedNotification(videoToSave.title);

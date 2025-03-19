@@ -1,42 +1,25 @@
 const path = require('path');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyPlugin = require('copy-webpack-plugin');
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 module.exports = {
-  mode: 'development',
-  devtool: 'cheap-module-source-map',
-  entry: {
-    popup: './src/popup/index.tsx',
-    content: './src/content/index.ts',
-    background: './src/background/index.ts',
-  },
+  mode: process.env.NODE_ENV === 'production' ? 'production' : 'development',
+  entry: './src/index.tsx',
   output: {
     path: path.resolve(__dirname, 'dist'),
-    filename: '[name].js',
+    filename: 'bundle.js',
+    publicPath: '/'
   },
   module: {
     rules: [
       {
-        test: /\.(js|jsx|ts|tsx)$/,
+        test: /\.tsx?$/,
+        use: 'ts-loader',
         exclude: /node_modules/,
-        use: {
-          loader: 'babel-loader',
-          options: {
-            presets: [
-              '@babel/preset-env',
-              '@babel/preset-react',
-              '@babel/preset-typescript',
-            ],
-          },
-        },
       },
       {
         test: /\.css$/,
-        use: [
-          MiniCssExtractPlugin.loader,
-          'css-loader',
-          'postcss-loader',
-        ],
+        use: ['style-loader', 'css-loader', 'postcss-loader']
       },
       {
         test: /\.(png|svg|jpg|jpeg|gif)$/i,
@@ -44,22 +27,26 @@ module.exports = {
       },
     ],
   },
+  resolve: {
+    extensions: ['.tsx', '.ts', '.js'],
+  },
   plugins: [
+    new HtmlWebpackPlugin({
+      template: './public/index.html',
+      filename: 'index.html'
+    }),
     new CopyPlugin({
       patterns: [
-        { from: 'manifest.json', to: '' },
-        { from: 'popup.html', to: '' },
-        { from: 'icons', to: 'icons', noErrorOnMissing: true },
+        { from: "icons", to: "icons" }
       ],
     }),
-    new MiniCssExtractPlugin({
-      filename: '[name].css',
-    }),
   ],
-  resolve: {
-    extensions: ['.tsx', '.ts', '.js', '.jsx'],
-  },
-  optimization: {
-    minimize: false,
+  devServer: {
+    static: {
+      directory: path.join(__dirname, 'dist'),
+    },
+    historyApiFallback: true,
+    compress: true,
+    port: 3000,
   },
 };

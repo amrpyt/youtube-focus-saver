@@ -1,3 +1,6 @@
+// Add an export statement to make this a module
+export {};
+
 const { DatabaseService } = require('./services/database');
 
 // Test user ID (matches the one we created in SQL)

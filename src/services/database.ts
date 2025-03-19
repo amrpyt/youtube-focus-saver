@@ -1,4 +1,5 @@
-import { supabase, SupabaseClient } from './supabase';
+import { supabase } from './supabase';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { v4 as uuidv4 } from 'uuid';
 
 export interface Video {
@@ -202,18 +203,7 @@ export class DatabaseService {
     
     if (!data) return [];
     
-    return data.map((session: SessionData) => ({
-      id: session.id,
-      videoId: session.video_id,
-      videoTitle: session.video_title,
-      startTime: session.start_time,
-      endTime: session.end_time,
-      watchDuration: session.watch_duration,
-      focusScore: session.focus_score,
-      pauseCount: session.pause_count,
-      tabSwitchCount: session.tab_switch_count,
-      completionRate: session.completion_rate
-    }));
+    return this.mapDbSessionsToClientFormat(data);
   }
   
   /**
@@ -287,5 +277,21 @@ export class DatabaseService {
     }
     
     return { succeeded, failed };
+  }
+
+  // Update this method to properly handle null values
+  private mapDbSessionsToClientFormat(data: any[]): SessionInput[] {
+    return data.map((session: SessionData) => ({
+      id: session.id,
+      videoId: session.video_id,
+      videoTitle: session.video_title,
+      startTime: session.start_time,
+      endTime: session.end_time as string | undefined, // Cast null to undefined
+      watchDuration: session.watch_duration,
+      focusScore: session.focus_score,
+      pauseCount: session.pause_count,
+      tabSwitchCount: session.tab_switch_count,
+      completionRate: session.completion_rate
+    }));
   }
 } 

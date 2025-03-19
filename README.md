@@ -1,77 +1,71 @@
 # YouTube Focus Saver
 
-A Chrome extension that helps you save and organize YouTube videos for focused learning. This extension automatically extracts video information, including transcripts, and allows you to revisit content when you're ready to focus.
+A web application for saving YouTube videos, tracking focus metrics, and enhancing your YouTube learning experience.
 
 ## Features
 
-- **Automatic video saving**: Automatically saves metadata for YouTube videos you watch
-- **Transcript extraction**: Saves video transcripts for easy reference
-- **Clean, minimalist UI**: Designed for distraction-free browsing of your saved content
-- **Cloud sync** (optional): Sync your saved videos across devices with Supabase integration
-- **AI summaries** (optional): Generate summaries of video content using Google's Gemini API
-- **Dark mode support**: Choose between light, dark, or system theme
+- **Save Videos**: Easily save YouTube videos for later viewing
+- **Focus Tracking**: Monitor your focus while watching educational content
+- **Dashboard**: View your focus metrics and progress over time
+- **Video Management**: Organize your saved videos with status tracking and search
+- **Secure Authentication**: User accounts with secure authentication via Supabase
 
-## Installation
+## Technology Stack
 
-### Development Mode
+- **Frontend**: React, TypeScript, Tailwind CSS
+- **Backend**: Supabase (Authentication, Database, Storage)
+- **APIs**: YouTube Data API
+- **Build Tool**: Vite
 
-1. Clone this repository:
+## Getting Started
+
+### Prerequisites
+
+- Node.js 16+ and npm
+- Supabase account for backend services
+- YouTube Data API key
+
+### Installation
+
+1. Clone the repository
    ```
    git clone https://github.com/yourusername/youtube-focus-saver.git
    cd youtube-focus-saver
    ```
 
-2. Install dependencies:
+2. Install dependencies
    ```
    npm install
    ```
 
-3. Build the extension:
+3. Create a `.env` file based on `.env.example` and add your configuration values
    ```
-   npm run build
+   cp public/.env.example .env
    ```
 
-4. Load the extension in Chrome:
-   - Open Chrome and navigate to `chrome://extensions/`
-   - Enable "Developer mode" in the top-right corner
-   - Click "Load unpacked" and select the `dist` directory from this project
+4. Start the development server
+   ```
+   npm run dev
+   ```
 
-### Production Use
+5. Open your browser to http://localhost:3000
 
-The extension will be available on the Chrome Web Store once it's published.
-
-## Development
-
-- Run in watch mode: `npm run dev`
-- Build for production: `npm run build`
-
-## Project Structure
+### Building for Production
 
 ```
-youtube-focus-saver/
-├── dist/               # Built extension files (generated)
-├── src/
-│   ├── background/     # Background script
-│   ├── content/        # Content scripts
-│   ├── popup/          # Popup UI
-│   ├── services/       # Service modules
-│   ├── styles/         # CSS and Tailwind styles
-│   └── types/          # TypeScript type definitions
-├── icons/              # Extension icons
-├── manifest.json       # Extension manifest
-├── webpack.config.js   # Webpack configuration
-└── README.md           # This file
+npm run build
 ```
 
-## Technologies Used
+The built project will be in the `dist` directory, ready to be deployed to your hosting provider of choice.
 
-- TypeScript
-- React
-- Tailwind CSS
-- Chrome Extension API
-- YouTube Data API
-- Google Gemini API (optional)
-- Supabase (optional)
+## Database Schema
+
+The application uses Supabase for the backend database with the following tables:
+
+- **videos**: Stores saved video information
+- **watch_sessions**: Tracks individual video watching sessions
+- **user_metrics**: Aggregates daily focus metrics
+- **user_settings**: Stores user preferences
 
 ## Contributing
 
@@ -80,3 +74,10 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Acknowledgments
+
+- [Supabase](https://supabase.io/) for the fantastic backend services
+- [YouTube Data API](https://developers.google.com/youtube/v3) for video metadata
+- [React](https://reactjs.org/) and [TypeScript](https://www.typescriptlang.org/) for the frontend framework
+- [Tailwind CSS](https://tailwindcss.com/) for styling

@@ -1,5 +1,5 @@
 ---
-description: 
+description: Specific guidelines for TypeScript usage, including strict typing and interface usage.
 globs: 
 alwaysApply: false
 ---

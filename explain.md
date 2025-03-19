@@ -35,4 +35,54 @@ This file provides beginner-friendly explanations of code changes in the YouTube
 - **What was added/changed**: Database migrations system
 - **Where**: supabase/migrations folder, supabase/apply-migrations.js
 - **Explanation**:  
-  We created a system that helps us make changes to our database over time. Think about how you might renovate a house - you wouldn't tear down the whole house and rebuild it every time you want to add a new room. Instead, you'd carefully add the new room without disturbing the rest of the house. Our migration system works the same way. Each migration file contains instructions for adding or changing parts of our database without losing data. We also created a special tool (apply-migrations.js) that applies these changes safely. It's like having an instruction manual for the renovation that makes sure everything is done in the right order. 
+  We created a system that helps us make changes to our database over time. Think about how you might renovate a house - you wouldn't tear down the whole house and rebuild it every time you want to add a new room. Instead, you'd carefully add the new room without disturbing the rest of the house. Our migration system works the same way. Each migration file contains instructions for adding or changing parts of our database without losing data. We also created a special tool (apply-migrations.js) that applies these changes safely. It's like having an instruction manual for the renovation that makes sure everything is done in the right order.
+
+## Context Providers in the Web App
+
+Context providers are a fundamental part of the web application's architecture. They serve as centralized data stores and enable different parts of the application to access shared data without having to explicitly pass props through each component.
+
+In our YouTube Focus Saver web app, we use three main context providers:
+
+### AuthContext
+
+The Authentication Context manages user login state, providing information about:
+
+- Whether a user is currently logged in
+- The user's profile information
+- Login, signup, and logout functionality
+- The Supabase client instance for database operations
+
+Think of it as the security guard of the application who knows who you are and controls what you can access.
+
+### VideoContext
+
+The Video Context handles all the saved videos in the application:
+
+- Fetching videos from the database
+- Adding new videos
+- Updating video information
+- Deleting videos
+- Keeping track of which video is currently selected
+
+It's like a video librarian who knows where all your videos are stored and can help you organize them.
+
+### MetricsContext
+
+The Metrics Context manages focus tracking data:
+
+- Daily focus metrics (total watch time, focus time, etc.)
+- Individual watch sessions
+- Functions to add and update watch sessions
+
+Think of this as your personal coach who tracks how well you're focusing during your learning sessions and helps you improve over time.
+
+### How They Work Together
+
+These contexts work together to create a seamless experience:
+
+1. The **AuthContext** verifies you're logged in
+2. The **VideoContext** shows your saved videos
+3. When you watch a video, the **MetricsContext** tracks your focus
+4. The dashboard displays your focus metrics using data from the **MetricsContext**
+
+All of this happens without components needing to know how the data is being fetched or managed behind the scenes, making the code cleaner and more maintainable. 

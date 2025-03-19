@@ -1,5 +1,5 @@
 ---
-description: 
+description: General rules for React and TypeScript projects, focusing on code clarity and best practices.
 globs: 
 alwaysApply: false
 ---

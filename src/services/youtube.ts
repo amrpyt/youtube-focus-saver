@@ -6,7 +6,7 @@
  * 2. Transcript extraction for captions
  */
 
-import { VideoMetadata, TranscriptItem, YouTubeServiceConfig, VideoData } from '../types';
+import { VideoData } from '../types';
 
 // Types for video data
 export interface VideoMetadata {

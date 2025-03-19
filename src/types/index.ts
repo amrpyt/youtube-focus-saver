@@ -31,27 +31,58 @@ export interface Video {
   title: string;
   url: string;
   thumbnailUrl: string;
-  channelName: string;
-  description: string;
-  transcript: TranscriptItem[];
-  summary: string;
-  dateAdded: number;
-  status: 'saved' | 'archived' | 'deleted';
-  syncStatus?: 'synced' | 'pending' | 'failed';
+  channelName?: string;
+  description?: string;
+  transcript?: string;
+  summary?: string;
+  dateAdded: string;
+  status: 'saved' | 'watched' | 'archived' | 'processing';
+  syncStatus?: 'local' | 'synced' | 'pending';
+  userId?: string;
 }
 
 export interface AppSettings {
-  cloudSyncEnabled: boolean;
+  cloudSync: boolean;
   autoSaveVideos: boolean;
-  darkMode: 'light' | 'dark' | 'system';
-  generateSummaries: boolean;
-  apiKeys: {
-    [key: string]: string;
-  };
-  notifications: {
-    enabled: boolean;
-    frequency: string;
-  };
+  darkMode: boolean;
+  generateSummary: boolean;
+  openAiApiKey: string;
+  notifyNewFeatures: boolean;
+}
+
+export interface User {
+  id: string;
+  email: string;
+  createdAt?: string;
+  lastLogin?: string;
+}
+
+export interface FocusMetric {
+  id?: string;
+  user_id: string;
+  date: string;
+  total_watch_time: number;
+  focus_time: number;
+  distraction_count: number;
+  videos_watched: number;
+}
+
+export interface WatchSession {
+  id: string;
+  videoId: string;
+  userId: string;
+  startTime: string;
+  endTime: string | null;
+  duration: number | null; // in seconds
+  focusPercentage: number;
+  videoTitle: string;
+  distractionCount: number;
+}
+
+export interface ApiResponse<T> {
+  data?: T;
+  error?: string;
+  status: number;
 }
 
 export interface YouTubeServiceConfig {
@@ -63,4 +94,16 @@ export interface VideoData {
   url: string;
   metadata?: VideoMetadata;
   transcript?: TranscriptItem[];
+}
+
+export interface FocusMetrics {
+  totalWatchTime: number; // in minutes
+  focusedWatchTime: number; // in minutes
+  focusPercentage: number; // 0-100
+  videoCount: number;
+  sessionsCount: number;
+  lastVideoDate: string | null;
+  formattedTotalWatchTime?: string;
+  formattedFocusedWatchTime?: string;
+  formattedFocusPercentage?: string;
 }

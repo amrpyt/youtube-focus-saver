@@ -1,5 +1,5 @@
 ---
-description: 
+description: Rules to optimize performance of React and TypeScript components.
 globs: 
 alwaysApply: false
 ---

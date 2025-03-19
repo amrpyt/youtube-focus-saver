@@ -7,26 +7,49 @@
  * 3. Manages API requests to Gemini for summaries
  */
 
+// Add an empty export to make this file a module
+export {};
+
 // Listen for tab updates
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  // Check if the tab is a YouTube video page
-  if (
-    changeInfo.status === 'complete' &&
-    tab.url &&
-    tab.url.includes('youtube.com/watch')
-  ) {
-    // Send message to content script to extract video data
-    chrome.tabs.sendMessage(tabId, { action: 'extractVideoData' });
+  if (changeInfo.status === 'complete' && tab.url?.includes('youtube.com/watch')) {
+    chrome.tabs.sendMessage(tabId, {
+      type: 'NEW_VIDEO',
+      videoId: new URL(tab.url).searchParams.get('v')
+    });
   }
 });
 
 // Listen for messages from content script
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.action === 'videoSaved') {
-    // A video was saved, check if we need to sync or generate summary
-    handleNewVideo(message.video);
+  if (message.type === 'SAVE_VIDEO') {
+    console.log('Background received request to save video:', message.videoData);
+    
+    // Store video in local storage
+    chrome.storage.local.get(['videos'], (result) => {
+      const videos = result.videos || [];
+      const existingVideoIndex = videos.findIndex(
+        (v: any) => v.videoId === message.videoData.videoId
+      );
+      
+      if (existingVideoIndex >= 0) {
+        // Update existing video
+        videos[existingVideoIndex] = {
+          ...videos[existingVideoIndex],
+          ...message.videoData,
+        };
+      } else {
+        // Add new video
+        videos.push(message.videoData);
+      }
+      
+      chrome.storage.local.set({ videos }, () => {
+        sendResponse({ success: true });
+      });
+    });
+    
+    return true; // Keep sendResponse valid
   }
-  return true; // Keep the message channel open for async responses
 });
 
 /**

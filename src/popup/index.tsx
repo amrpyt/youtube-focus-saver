@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import '../styles/tailwind.css';
+import Auth from './components/Auth';
+import Dashboard from './components/Dashboard';
+import { authService, AuthUser } from '../services/auth';
 
 // Define types for our data
 interface Video {
@@ -385,6 +388,7 @@ const App: React.FC = () => {
   const [videos, setVideos] = useState<Video[]>([]);
   const [filteredVideos, setFilteredVideos] = useState<Video[]>([]);
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [settings, setSettings] = useState<AppSettings>({
     cloudSyncEnabled: false,
     autoSaveVideos: true,
@@ -398,7 +402,26 @@ const App: React.FC = () => {
   });
   const [searchQuery, setSearchQuery] = useState('');
   const [showSettings, setShowSettings] = useState(false);
+  const [showDashboard, setShowDashboard] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+
+  // Check authentication status when component mounts
+  useEffect(() => {
+    const checkAuth = async () => {
+      setIsCheckingAuth(true);
+      try {
+        const currentUser = await authService.getCurrentUser();
+        setUser(currentUser);
+      } catch (error) {
+        console.error('Error checking auth:', error);
+      } finally {
+        setIsCheckingAuth(false);
+      }
+    };
+    
+    checkAuth();
+  }, []);
 
   // Load videos and settings when component mounts
   useEffect(() => {
@@ -475,12 +498,55 @@ const App: React.FC = () => {
     setShowSettings(false);
   };
 
-  // Helper function to format time
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  // Handle successful authentication
+  const handleAuthSuccess = (authUser: AuthUser) => {
+    setUser(authUser);
+    // Update settings to enable cloud sync by default for logged in users
+    if (!settings.cloudSyncEnabled) {
+      const updatedSettings = {
+        ...settings,
+        cloudSyncEnabled: true
+      };
+      setSettings(updatedSettings);
+      chrome.storage.local.set({ 'youtubeFocusSaver:settings': updatedSettings });
+    }
   };
+
+  // Handle sign out
+  const handleSignOut = async () => {
+    try {
+      await authService.signOut();
+      setUser(null);
+      setShowDashboard(false);
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
+  // If checking auth, show loading
+  if (isCheckingAuth) {
+    return (
+      <div className="flex justify-center items-center h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  // If user is not authenticated, show auth screen
+  if (!user && settings.cloudSyncEnabled) {
+    return <Auth onAuthSuccess={handleAuthSuccess} />;
+  }
+
+  // If showing dashboard
+  if (showDashboard && user) {
+    return (
+      <Dashboard 
+        user={user}
+        onSignOut={handleSignOut}
+        onBackToVideos={() => setShowDashboard(false)}
+      />
+    );
+  }
 
   // If showing settings
   if (showSettings) {
@@ -508,15 +574,29 @@ const App: React.FC = () => {
     <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900">
       <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
         <h1 className="font-bold text-lg text-gray-900 dark:text-white">YouTube Focus Saver</h1>
-        <button
-          onClick={() => setShowSettings(true)}
-          className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"
-        >
-          <svg className="w-5 h-5 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>
-        </button>
+        <div className="flex items-center space-x-2">
+          {user && (
+            <button
+              onClick={() => setShowDashboard(true)}
+              className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"
+              title="View Dashboard"
+            >
+              <svg className="w-5 h-5 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            </button>
+          )}
+          <button
+            onClick={() => setShowSettings(true)}
+            className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"
+            title="Settings"
+          >
+            <svg className="w-5 h-5 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       <div className="p-4">
@@ -563,9 +643,40 @@ const App: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* User status footer */}
+      {(user || settings.cloudSyncEnabled) && (
+        <div className="px-4 py-2 border-t dark:border-gray-700 flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
+          <div className="flex items-center">
+            {user ? (
+              <>
+                <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                <span>Signed in as {user.email}</span>
+              </>
+            ) : (
+              <>
+                <span className="w-2 h-2 bg-yellow-500 rounded-full mr-2"></span>
+                <span>Cloud sync enabled. <button onClick={() => setUser(null)} className="text-blue-500 hover:underline">Sign in</button></span>
+              </>
+            )}
+          </div>
+          {user && (
+            <button onClick={handleSignOut} className="text-blue-500 hover:underline">
+              Sign out
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 };
+
+// Helper function to format time
+function formatTime(seconds: number): string {
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
 
 // Render the app
 ReactDOM.render(
@@ -574,10 +685,3 @@ ReactDOM.render(
   </React.StrictMode>,
   document.getElementById('root')
 );
-
-// Helper function used in component
-function formatTime(seconds: number): string {
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
-  return `${mins}:${secs.toString().padStart(2, '0')}`;
-}
